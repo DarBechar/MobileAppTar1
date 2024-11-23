@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>מערכת נקודות ומסלולים</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .section {
+            background-color: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .track-visualization {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            position: relative;
+            height: 400px;
+            background-color: #f8f8f8;
+        }
+        .point {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .point-label {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            margin-top: -10px;
+        }
+        .segment {
+            position: absolute;
+            height: 2px;
+            background-color: blue;
+            transform-origin: left center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f0f0f0;
+        }
+        .result {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f8f8f8;
+            border-radius: 4px;
+        }
+        .true { color: green; }
+        .false { color: red; }
+    </style>
+</head>
+<body>
+    <h1>מערכת נקודות ומסלולים</h1>
+    
+    <div class="section">
+        <h2>חלק א - בדיקת שוויון בין נקודות</h2>
+        <div id="equalityTests"></div>
+    </div>
+
+    <div class="section">
+        <h2>חלק ב - חיפוש נקודות לפי ערכים</h2>
+        <div id="valueSearchTests"></div>
+    </div>
+
+    <div class="section">
+        <h2>חלק ג - חיפוש נקודה לפי אובייקט</h2>
+        <div id="objectSearchTests"></div>
+    </div>
+
+    <div class="section">
+        <h2>חלק ד - חישוב מסלול</h2>
+        <div id="trackCalculation"></div>
+    </div>
+
+    <script>
+        class Point {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+
+            show() {
+                return `(${this.x},${this.y})`;
+            }
+
+            equals(p) {
+                return this.x === p.x && this.y === p.y;
+            }
+        }
+
+        // פונקציה 2 - חיפוש לפי ערכים
+        function findPointByValues(points, x, y) {
+            for (let point of points) {
+                if (point.x === x && point.y === y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // פונקציה 3 - חיפוש לפי אובייקט
+        function findPointByObject(points, searchPoint) {
+            for (let point of points) {
+                if (point.equals(searchPoint)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // פונקציה 4 - חישוב מרחק
+        function calculateDistance(point1, point2) {
+            const dx = point2.x - point1.x;
+            const dy = point2.y - point1.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // פונקציה 4 - חישוב אורך מסלול
+        function calculateTrackLength(points) {
+            let totalDistance = 0;
+            let segments = [];
+
+            for (let i = 0; i < points.length - 1; i++) {
+                const distance = calculateDistance(points[i], points[i + 1]);
+                totalDistance += distance;
+                segments.push({
+                    start: points[i],
+                    end: points[i + 1],
+                    distance: distance
+                });
+            }
+
+            return {
+                totalDistance: totalDistance,
+                segments: segments
+            };
+        }
+
+        // מערך נקודות לבדיקה
+        const points = [
+            new Point(1, 2),
+            new Point(3, 4),
+            new Point(5, 6),
+            new Point(2, 3)
+        ];
+
+        // בדיקות שוויון
+        let equalityHtml = `
+            <h3>בדיקת מתודת Equals:</h3>
+            <div class="result">
+                נקודה 1: ${points[0].show()}<br>
+                נקודה 2: ${points[1].show()}<br>
+                האם שוות? <span class="false">${points[0].equals(points[1])}</span>
+            </div>
+        `;
+        document.getElementById('equalityTests').innerHTML = equalityHtml;
+
+        // בדיקות חיפוש לפי ערכים
+        let valueSearchHtml = `
+            <h3>בדיקת חיפוש לפי ערכים:</h3>
+            <div class="result">
+                מערך הנקודות:<br>
+                ${points.map(p => p.show()).join(', ')}<br><br>
+                חיפוש (1,2): <span class="${findPointByValues(points, 1, 2)}">${findPointByValues(points, 1, 2)}</span><br>
+                חיפוש (7,7): <span class="${findPointByValues(points, 7, 7)}">${findPointByValues(points, 7, 7)}</span>
+            </div>
+        `;
+        document.getElementById('valueSearchTests').innerHTML = valueSearchHtml;
+
+        // בדיקות חיפוש לפי אובייקט
+        let objectSearchHtml = `
+            <h3>בדיקת חיפוש לפי אובייקט:</h3>
+            <div class="result">
+                חיפוש ${new Point(3, 4).show()}: 
+                <span class="${findPointByObject(points, new Point(3, 4))}">${findPointByObject(points, new Point(3, 4))}</span><br>
+                חיפוש ${new Point(7, 7).show()}: 
+                <span class="${findPointByObject(points, new Point(7, 7))}">${findPointByObject(points, new Point(7, 7))}</span>
+            </div>
+        `;
+        document.getElementById('objectSearchTests').innerHTML = objectSearchHtml;
+
+        // מסלול וחישוב מרחק
+        const trackPoints = [
+            new Point(2, 3),
+            new Point(5, 7),
+            new Point(8, 4),
+            new Point(12, 6),
+            new Point(15, 3)
+        ];
+
+        const result = calculateTrackLength(trackPoints);
+
+        let trackHtml = `
+            <h3>נקודות המסלול:</h3>
+            <table>
+                <tr><th>מספר נקודה</th><th>מיקום</th></tr>
+                ${trackPoints.map((p, i) => `
+                    <tr><td>${i + 1}</td><td>${p.show()}</td></tr>
+                `).join('')}
+            </table>
+
+            <h3>מקטעי המסלול:</h3>
+            <table>
+                <tr><th>מקטע</th><th>מנקודה</th><th>לנקודה</th><th>מרחק</th></tr>
+                ${result.segments.map((s, i) => `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${s.start.show()}</td>
+                        <td>${s.end.show()}</td>
+                        <td>${s.distance.toFixed(2)}</td>
+                    </tr>
+                `).join('')}
+            </table>
+
+            <h3>אורך המסלול הכולל: ${result.totalDistance.toFixed(2)} יחידות</h3>
+
+            <h3>הדמיית המסלול:</h3>
+            <div class="track-visualization" id="visualization"></div>
+        `;
+        document.getElementById('trackCalculation').innerHTML = trackHtml;
+
+        // יצירת הויזואליזציה
+        const visualization = document.getElementById('visualization');
+        const maxX = Math.max(...trackPoints.map(p => p.x));
+        const maxY = Math.max(...trackPoints.map(p => p.y));
+        const scale = 350 / Math.max(maxX, maxY);
+
+        trackPoints.forEach((point, index) => {
+            // נקודה
+            const dot = document.createElement('div');
+            dot.className = 'point';
+            dot.style.left = `${point.x * scale}px`;
+            dot.style.top = `${point.y * scale}px`;
+            
+            // תווית
+            const label = document.createElement('div');
+            label.className = 'point-label';
+            label.textContent = `${index + 1}`;
+            label.style.left = `${point.x * scale}px`;
+            label.style.top = `${point.y * scale}px`;
+            
+            visualization.appendChild(dot);
+            visualization.appendChild(label);
+
+            // קו למקטע
+            if (index < trackPoints.length - 1) {
+                const nextPoint = trackPoints[index + 1];
+                const dx = nextPoint.x - point.x;
+                const dy = nextPoint.y - point.y;
+                const length = Math.sqrt(dx * dx + dy * dy) * scale;
+                const angle = Math.atan2(dy, dx);
+
+                const line = document.createElement('div');
+                line.className = 'segment';
+                line.style.left = `${point.x * scale}px`;
+                line.style.top = `${point.y * scale}px`;
+                line.style.width = `${length}px`;
+                line.style.transform = `rotate(${angle}rad)`;
+                
+                visualization.appendChild(line);
+            }
+        });
+    </script>
+</body>
+</html>
